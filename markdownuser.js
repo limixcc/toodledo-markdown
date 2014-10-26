@@ -1667,45 +1667,61 @@ return window.markdown;
 function getNotes() {
 var items = document.getElementsByClassName('note');
 if (items.length > 0) {
-for (var i = 0; i < items.length; i++) {
-  var divs = items[i].getElementsByTagName('div');
-  result = markdown.toHTML(divs[0].textContent);
-  if (divs.length > 1) {
-    divs[1].innerHTML = result;
-  } else {
-    cloneDiv = divs[0].cloneNode(true);
-    // console.debug(cloneDiv.innerHTML);
-    cloneDiv.id = 'limix' + cloneDiv.id;
-    cloneDiv.innerHTML = result;
-    cloneDiv.hidden = false;
-    items[i].appendChild(cloneDiv);
+  for (var i = 0; i < items.length; i++) {
+    var item = items[i];
+    var divs = item.getElementsByTagName('div');
+    result = markdown.toHTML(divs[0].textContent);
+    if (divs.length > 1) {
+      divs[1].innerHTML = result;
+    } else {
+      cloneDiv = divs[0].cloneNode(true);
+      // console.debug(cloneDiv.innerHTML);
+      cloneDiv.id = 'limix' + cloneDiv.id;
+      cloneDiv.innerHTML = result;
+      cloneDiv.hidden = false;
+      // LIMIX_TODO 将这些getNotes相关的信息剔除出去.
+      var unique_id = cloneDiv.id.replace("limixnote","");
+      console.log("unique id " + unique_id);
+      var tagSpan = document.getElementById("tag" + unique_id).innerHTML;
+      var tagStr = tagSpan.replace("Tag: ","");
+      console.log("here tagStr " + tagStr);
+      item.appendChild(cloneDiv);
+      if(tagStr){
+        var tags = tagStr.replace(", "," ","g");
+      }
+      console.log("tags" + tags);
+      document.limix.highlight.highlight(document.getElementById(cloneDiv.id),tags);
+    }
+    divs[0].hidden = true;
   }
-  divs[0].hidden = true;
-}
 }
 console.log(getNotes.count);
 };
 getNotes.count = 0;
 function limixInit() {
   window.onload = function () {
-    var piId = setInterval(getNotes, 10000);
-    console.log('IIIII:the interval piId is:' + piId);
+    // var piId = setInterval(getNotes, 200000);
+    // console.log('IIIII:the interval piId is:' + piId);
     // added for focus
+    limix.getNotes();
     console.log('IIIII:begin to focus the input Quick Search');
     document.getElementById('searchField').focus();
     // added for page Style
     var GM_LIMIX_AddStyle = document.createElement('style');
     GM_LIMIX_AddStyle.type = 'text/css';
     GM_LIMIX_AddStyle.innerHTML = 'blockquote {background:#f9f9f9;border-left:10px solid #ccc;margin:1.5em 10px;padding:.5em 10px;quotes:"C""D""8""9";}blockquote:before {color:#ccc;content:open-quote;font-size:4em;line-height:.1em;margin-right:.25em;vertical-align:-.4em;}blockquote p {display:inline;}';
-    document.getElementsByTagName('head') [0].appendChild(GM_LIMIX_AddStyle);
+    document.getElementById('rchunk').appendChild(GM_LIMIX_AddStyle);
     // GM_addStyle("blockquote {background:#f9f9f9;border-left:10px solid #ccc;margin:1.5em 10px;padding:.5em 10px;quotes:\"\201C\"\"\201D\"\"\2018\"\"\2019\";}blockquote:before {color:#ccc;content:open-quote;font-size:4em;line-height:.1em;margin-right:.25em;vertical-align:-.4em;}blockquote p {display:inline;}");
     limixAspect();
   }
 }
 limixInit();
+// 统一一下自己需要调用的javascript
 if (!limix){
   var limix = {};
 }
+limix.getNotes = getNotes;
+
 function limixAspect(){
   var as = window.aspect;
   console.log("IIIII:limix.aspect.before");
@@ -1719,6 +1735,24 @@ function limixAspect(){
       return "limix_break";
     }
     console.log("IIIII: do something before the doSearch");
+  });
+  var h4 = as.before(window, 'doSearch', function (a) {
+    console.log("I am runnging");
+    setTimeout(limix.getNotes,2000);
+    setTimeout(limix.getNotes,5000);
+    setTimeout(limix.getNotes,7000);
+  });
+  // 添加执行任务后刷新
+  var h2 = as.after(window,'savedNote',function (a) {
+    console.log("I am running");
+    limix.getNotes();    
+  });
+  // 刷新页面后执行
+  var h3 = as.after(window,'viewByGot',function(a,b,c){
+    console.log("I am runnging");
+    setTimeout(limix.getNotes,2000);
+    setTimeout(limix.getNotes,5000);
+    setTimeout(limix.getNotes,7000);
   });
   console.log("IIIII:limix.aspect.end");
 }
